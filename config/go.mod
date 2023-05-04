@@ -2,7 +2,7 @@ module github.com/sparrow-community/pkgs/config
 
 go 1.20
 
-require go-micro.dev/v4 v4.10.1
+require go-micro.dev/v4 v4.10.2
 
 require (
 	github.com/golang/protobuf v1.5.3 // indirect

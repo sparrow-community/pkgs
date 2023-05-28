@@ -15,6 +15,7 @@ const (
 
 // Options .
 type Options struct {
+	defaultRsaKeyPair  bool
 	rsaPrivateKey      *rsa.PrivateKey
 	rsaPublicKey       *rsa.PublicKey
 	rsaPrivateKeyBytes []byte
@@ -25,6 +26,12 @@ type Options struct {
 }
 
 type Option func(*Options)
+
+func WithDefaultRsaKeyPair(b bool) Option {
+	return func(options *Options) {
+		options.defaultRsaKeyPair = b
+	}
+}
 
 func WithRsaPrivateKey(key *rsa.PrivateKey) Option {
 	return func(options *Options) {

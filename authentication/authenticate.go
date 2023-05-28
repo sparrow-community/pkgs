@@ -1,6 +1,8 @@
 package authentication
 
 import (
+	"crypto/rand"
+	"crypto/rsa"
 	"crypto/x509"
 	"encoding/json"
 	"encoding/pem"
@@ -32,6 +34,19 @@ func New(opt ...Option) (*Authenticate, error) {
 	opts := Options{}
 	for _, o := range opt {
 		o(&opts)
+	}
+
+	if opts.defaultRsaKeyPair {
+		privateKey, err := rsa.GenerateKey(rand.Reader, 4096)
+		if err != nil {
+			return nil, err
+		}
+		if err := privateKey.Validate(); err != nil {
+			return nil, err
+		}
+		publicKey := privateKey.Public()
+		opts.rsaPrivateKey = privateKey
+		opts.rsaPublicKey = publicKey.(*rsa.PublicKey)
 	}
 
 	if len(opts.rsaPrivateKeyBytes) > 0 {

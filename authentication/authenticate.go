@@ -14,16 +14,13 @@ import (
 )
 
 type Token struct {
-	AccessToken  string    `json:"access_token"`
-	RefreshToken string    `json:"refresh_token,omitempty"`
-	Exp          time.Time `json:"exp,omitempty"`
-	Iat          time.Time `json:"iat,omitempty"`
-	Iss          string    `json:"iss,omitempty"`
-}
-
-type User struct {
-	ID       string                 `json:"id"`
-	Metadata map[string]interface{} `json:"metadata"`
+	AccessToken  string                 `json:"access_token"`
+	RefreshToken string                 `json:"refresh_token,omitempty"`
+	Exp          time.Time              `json:"exp,omitempty"`
+	Iat          time.Time              `json:"iat,omitempty"`
+	Iss          string                 `json:"iss,omitempty"`
+	Subject      string                 `json:"subject"`
+	Claims       map[string]interface{} `json:"claims"`
 }
 
 type Authenticate struct {
@@ -37,7 +34,7 @@ func New(opt ...Option) (*Authenticate, error) {
 	}
 
 	if opts.defaultRsaKeyPair {
-		privateKey, err := rsa.GenerateKey(rand.Reader, 4096)
+		privateKey, err := rsa.GenerateKey(rand.Reader, 1024)
 		if err != nil {
 			return nil, err
 		}
@@ -85,12 +82,12 @@ func (a *Authenticate) Generate(opts ...TokenOption) (*Token, error) {
 		Issuer(tokenOpts.issuer).
 		IssuedAt(time.Now())
 
-	for k, v := range tokenOpts.Metadata {
+	for k, v := range tokenOpts.Claims {
 		b.Claim(k, v)
 	}
 
 	accessToken, err := b.
-		Expiration(tokenOpts.expiration).
+		Expiration(time.Now().Add(tokenOpts.expiration)).
 		Build()
 	if err != nil {
 		return nil, err
@@ -101,7 +98,7 @@ func (a *Authenticate) Generate(opts ...TokenOption) (*Token, error) {
 	}
 
 	refreshToken, err := b.
-		Expiration(tokenOpts.expiration.Add(time.Hour)).
+		Expiration(time.Now().Add(tokenOpts.expiration + 24*time.Hour)).
 		Build()
 	if err != nil {
 		return nil, err
@@ -119,25 +116,39 @@ func (a *Authenticate) Generate(opts ...TokenOption) (*Token, error) {
 	}, nil
 }
 
-func (a *Authenticate) Inspect(signedToken []byte) (*User, error) {
+func (a *Authenticate) Parse(signedToken []byte) (*Token, error) {
+	token, err := jwt.Parse(signedToken, jwt.WithKey(jwa.RS256, a.opts.rsaPublicKey), jwt.WithValidate(false))
+	if err != nil {
+		return nil, err
+	}
+	return &Token{
+		Subject: token.Subject(),
+		Claims:  token.PrivateClaims(),
+		Exp:     token.Expiration(),
+		Iat:     token.IssuedAt(),
+		Iss:     token.Issuer(),
+	}, nil
+}
+
+func (a *Authenticate) Inspect(signedToken []byte) (*Token, error) {
 	token, err := jwt.Parse(signedToken, jwt.WithKey(jwa.RS256, a.opts.rsaPublicKey))
 	if err != nil {
 		return nil, err
 	}
-	return &User{
-		ID:       token.Subject(),
-		Metadata: token.PrivateClaims(),
+	return &Token{
+		Subject: token.Subject(),
+		Claims:  token.PrivateClaims(),
 	}, nil
 }
 
-func (a *Authenticate) InspectWithJwk(signedToken []byte) (*User, error) {
+func (a *Authenticate) InspectWithJwk(signedToken []byte) (*Token, error) {
 	token, err := jwt.Parse(signedToken, jwt.WithKeySet(a.opts.jwkSet, jws.WithUseDefault(true)))
 	if err != nil {
 		return nil, err
 	}
-	return &User{
-		ID:       token.Subject(),
-		Metadata: token.PrivateClaims(),
+	return &Token{
+		Subject: token.Subject(),
+		Claims:  token.PrivateClaims(),
 	}, nil
 }
 
@@ -154,4 +165,22 @@ func (a *Authenticate) Jwks() ([]byte, error) {
 		return nil, err
 	}
 	return json.Marshal(set)
+}
+
+func (a *Authenticate) PrivateKeyBytes() []byte {
+	prvEncodeBytes := pem.EncodeToMemory(&pem.Block{
+		Type:    "RSA PRIVATE KEY",
+		Headers: nil,
+		Bytes:   x509.MarshalPKCS1PrivateKey(a.opts.rsaPrivateKey),
+	})
+	return prvEncodeBytes
+}
+
+func (a *Authenticate) PublicKeyBytes() []byte {
+	pubEncodeBytes := pem.EncodeToMemory(&pem.Block{
+		Type:    "RSA PUBLIC KEY",
+		Headers: nil,
+		Bytes:   x509.MarshalPKCS1PublicKey(a.opts.rsaPublicKey),
+	})
+	return pubEncodeBytes
 }

@@ -68,8 +68,8 @@ func WithJwk(data []byte, jwkType JwkType) Option {
 type TokenOptions struct {
 	subject    string
 	issuer     string
-	expiration time.Time
-	Metadata   map[string]any
+	expiration time.Duration
+	Claims     map[string]any
 }
 
 type TokenOption func(options *TokenOptions)
@@ -94,14 +94,14 @@ func WithIssuer(issuer string) TokenOption {
 	}
 }
 
-func WithExpiration(expiration time.Time) TokenOption {
+func WithExpiration(expiration time.Duration) TokenOption {
 	return func(options *TokenOptions) {
 		options.expiration = expiration
 	}
 }
 
-func WithMetadata(metadata map[string]any) TokenOption {
+func WithClaims(claims map[string]any) TokenOption {
 	return func(options *TokenOptions) {
-		options.Metadata = metadata
+		options.Claims = claims
 	}
 }

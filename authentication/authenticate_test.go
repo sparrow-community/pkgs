@@ -25,8 +25,8 @@ func TestGenerateAndInspectWithKey(t *testing.T) {
 	ret, err := authenticate.Generate(
 		WithSubject("uid"),
 		WithIssuer("github.com/sparrow-community"),
-		WithExpiration(time.Now().Add(time.Hour)),
-		WithMetadata(map[string]any{
+		WithExpiration(time.Hour),
+		WithClaims(map[string]any{
 			"kid":    "sparrow-community",
 			"scopes": []string{"user", "admin"},
 		}),
@@ -71,8 +71,8 @@ func TestJWKs(t *testing.T) {
 	ret, err := authenticate.Generate(
 		WithSubject("uid"),
 		WithIssuer("github.com/sparrow-community"),
-		WithExpiration(time.Now().Add(time.Hour)),
-		WithMetadata(map[string]any{
+		WithExpiration(time.Hour),
+		WithClaims(map[string]any{
 			"kid":    "sparrow-community",
 			"scopes": []string{"user", "admin"},
 		}),
@@ -120,8 +120,8 @@ func TestGenerateAndInspectWithKeyFile(t *testing.T) {
 	ret, err := authenticate.Generate(
 		WithSubject("uid"),
 		WithIssuer("github.com/sparrow-community"),
-		WithExpiration(time.Now().Add(time.Hour)),
-		WithMetadata(map[string]any{
+		WithExpiration(time.Hour),
+		WithClaims(map[string]any{
 			"kid":    "sparrow-community",
 			"scopes": []string{"user", "admin"},
 		}),

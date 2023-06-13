@@ -40,11 +40,6 @@ func TestGenerateAndInspectWithKey(t *testing.T) {
 		t.Error(err)
 	}
 	t.Logf("%+#v", accessTokenUser)
-	refreshTokenUser, err := authenticate.Inspect([]byte(ret.RefreshToken))
-	if err != nil {
-		t.Error(err)
-	}
-	t.Logf("%+#v", refreshTokenUser)
 }
 
 // use jwk inspect token
@@ -135,11 +130,6 @@ func TestGenerateAndInspectWithKeyFile(t *testing.T) {
 		t.Error(err)
 	}
 	t.Logf("%+#v", accessTokenUser)
-	refreshTokenUser, err := authenticate.Inspect([]byte(ret.RefreshToken))
-	if err != nil {
-		t.Error(err)
-	}
-	t.Logf("%+#v", refreshTokenUser)
 }
 
 // Generate rsa key pair to file

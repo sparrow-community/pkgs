@@ -1,4 +1,4 @@
-module github.com/sparrow-community/pkgs/authentication
+module github.com/sparrow-community/pkgs/auth
 
 go 1.20
 

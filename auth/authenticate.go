@@ -1,4 +1,4 @@
-package authentication
+package auth
 
 import (
 	"crypto/rand"
@@ -14,13 +14,12 @@ import (
 )
 
 type Token struct {
-	AccessToken  string                 `json:"access_token"`
-	RefreshToken string                 `json:"refresh_token,omitempty"`
-	Exp          time.Time              `json:"exp,omitempty"`
-	Iat          time.Time              `json:"iat,omitempty"`
-	Iss          string                 `json:"iss,omitempty"`
-	Subject      string                 `json:"subject"`
-	Claims       map[string]interface{} `json:"claims"`
+	AccessToken string                 `json:"access_token"`
+	Exp         time.Time              `json:"exp,omitempty"`
+	Iat         time.Time              `json:"iat,omitempty"`
+	Iss         string                 `json:"iss,omitempty"`
+	Subject     string                 `json:"subject"`
+	Claims      map[string]interface{} `json:"claims"`
 }
 
 type Authenticate struct {
@@ -97,22 +96,11 @@ func (a *Authenticate) Generate(opts ...TokenOption) (*Token, error) {
 		return nil, err
 	}
 
-	refreshToken, err := b.
-		Expiration(time.Now().Add(tokenOpts.expiration + 24*time.Hour)).
-		Build()
-	if err != nil {
-		return nil, err
-	}
-	signRefreshToken, err := jwt.Sign(refreshToken, jwt.WithKey(jwa.RS256, a.opts.rsaPrivateKey))
-	if err != nil {
-		return nil, err
-	}
 	return &Token{
-		AccessToken:  string(signAccessToken),
-		RefreshToken: string(signRefreshToken),
-		Exp:          accessToken.Expiration(),
-		Iat:          accessToken.IssuedAt(),
-		Iss:          accessToken.Issuer(),
+		AccessToken: string(signAccessToken),
+		Exp:         accessToken.Expiration(),
+		Iat:         accessToken.IssuedAt(),
+		Iss:         accessToken.Issuer(),
 	}, nil
 }
 

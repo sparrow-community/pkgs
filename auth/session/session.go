@@ -2,12 +2,14 @@ package session
 
 import (
 	"context"
+	"github.com/sparrow-community/pkgs/auth"
 	"net/http"
 	"time"
 )
 
 type Session struct {
 	Cookie http.Cookie
+	N      *auth.Authenticate
 }
 
 func New(opt ...Option) *Session {
@@ -31,6 +33,10 @@ func New(opt ...Option) *Session {
 
 	if len(opts.CookieName) > 0 {
 		s.Cookie.Name = opts.CookieName
+	}
+
+	if opts.N != nil {
+		s.N = opts.N
 	}
 
 	return s
